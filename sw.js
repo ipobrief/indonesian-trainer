@@ -1,5 +1,5 @@
 // 서비스워커 — 오프라인 캐싱 (앱 셸 + 아이콘)
-const CACHE = 'indo-trainer-v1';
+const CACHE = 'indo-trainer-v2';
 const ASSETS = [
   './',
   './index.html',
