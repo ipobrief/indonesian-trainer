@@ -1,0 +1,18 @@
+{
+  "name": "생활 인도네시아어 암기 트레이너",
+  "short_name": "인니어 트레이너",
+  "description": "생활 인도네시아어 문장을 듣고, 따라 말하고, 점수로 확인하며 암기하는 학습 앱.",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f1a14",
+  "theme_color": "#0f1a14",
+  "categories": ["education"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>생활 인도네시아어 암기 트레이너</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f1a14">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="인니어 트레이너">
+<link rel="apple-touch-icon" href="icon-192.png">
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+</script>
+<style>
+  :root{
+    --bg:#0f1a14; --card:#162a1f; --card2:#1f3a2b; --txt:#eafff2;
+    --muted:#9ad0b3; --accent:#19b36b; --good:#36d399; --bad:#ff6b81;
+    --warn:#ffd166; --line:#264a37;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Malgun Gothic",sans-serif;
+    background:linear-gradient(160deg,#0f1a14,#13241a);color:var(--txt);min-height:100vh}
+  header{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;
+    align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+  h1{font-size:19px;margin:0}
+  .wrap{max-width:780px;margin:0 auto;padding:18px 16px 60px}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .tab{background:var(--card);border:1px solid var(--line);color:var(--muted);
+    padding:8px 14px;border-radius:999px;cursor:pointer;font-size:14px}
+  .tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;
+    padding:22px;margin-bottom:16px}
+  .eng{font-size:26px;font-weight:700;line-height:1.35;margin:0 0 8px}
+  .kor{font-size:16px;color:var(--muted);margin:0 0 4px}
+  .meta{font-size:12px;color:var(--muted);margin-top:10px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+  button{font-family:inherit;font-size:15px;border:none;border-radius:12px;
+    padding:11px 16px;cursor:pointer;background:var(--card2);color:var(--txt);
+    border:1px solid var(--line)}
+  button:hover{filter:brightness(1.15)}
+  button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+  button.good{background:var(--good);color:#06281c;border:none}
+  button.bad{background:var(--bad);color:#3a0410;border:none}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  .pill{display:inline-block;background:var(--card2);border:1px solid var(--line);
+    border-radius:999px;padding:3px 10px;font-size:12px;color:var(--muted);margin-right:6px}
+  .result{margin-top:14px;font-size:17px;line-height:1.5;min-height:24px}
+  .w-ok{color:var(--good)} .w-bad{color:var(--bad);text-decoration:underline}
+  .score{font-size:40px;font-weight:800;margin:6px 0}
+  .bar{height:10px;background:var(--card2);border-radius:999px;overflow:hidden;margin-top:6px}
+  .bar>div{height:100%;background:var(--accent)}
+  .stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px}
+  .stat .box{background:var(--card2);border-radius:14px;padding:14px;text-align:center}
+  .stat .num{font-size:28px;font-weight:800}
+  .stat .lbl{font-size:12px;color:var(--muted);margin-top:4px}
+  label{font-size:13px;color:var(--muted)}
+  select,input[type=range],textarea,input[type=text]{font-family:inherit}
+  select{background:var(--card2);color:var(--txt);border:1px solid var(--line);
+    border-radius:10px;padding:8px 10px}
+  textarea{width:100%;background:var(--card2);color:var(--txt);border:1px solid var(--line);
+    border-radius:10px;padding:10px;min-height:90px;font-size:14px}
+  .list-item{background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;
+    align-items:center;gap:10px}
+  .list-item .e{font-weight:600}
+  .list-item .k{font-size:13px;color:var(--muted)}
+  .cat-header{margin:22px 0 10px;padding:8px 14px;font-size:15px;font-weight:700;
+    color:var(--accent);background:var(--card2);border-left:4px solid var(--accent);
+    border-radius:8px}
+  .cat-header span{color:var(--muted);font-weight:400;font-size:13px}
+  .cat-header:first-child{margin-top:0}
+  .box-badge{font-size:11px;padding:2px 8px;border-radius:999px;white-space:nowrap}
+  .controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:13px}
+  .hint{font-size:12px;color:var(--muted);margin-top:8px}
+  .wordchips{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px}
+  .wchip{background:var(--card2);border:1px solid var(--line);border-radius:9px;
+    padding:5px 11px;font-size:15px;cursor:pointer}
+  .wchip:hover{border-color:var(--accent)}
+  .wchip.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .wordinfo{margin-top:12px;font-size:14px;line-height:1.6}
+  .wordinfo .ipa{color:var(--warn);font-size:15px}
+  .wordinfo .pos{color:var(--accent);font-weight:600}
+  .wordinfo .def{color:var(--txt)}
+  .wordinfo .ex{color:var(--muted);font-style:italic}
+  a{color:var(--accent)}
+</style>
+</head>
+<body>
+<header>
+  <h1>🇮🇩 생활 인도네시아어 암기 트레이너</h1>
+  <div class="controls">
+    <label>음성 <select id="voiceSel" style="max-width:200px"></select></label>
+    <label>속도 <input type="range" id="rate" min="0.6" max="1.1" step="0.05" value="0.9"></label>
+    <label><input type="checkbox" id="autoplay" checked> 자동 재생</label>
+    <label><input type="checkbox" id="autoflow" checked> 이어서 말하기</label>
+    <label>마이크 <select id="micMode">
+      <option value="score">🎤 점수 채점</option>
+      <option value="record">🎧 내 발음 녹음</option>
+    </select></label>
+  </div>
+</header>
+<div class="wrap">
+  <div class="tabs">
+    <div class="tab active" data-tab="alphabet">알파벳</div>
+    <div class="tab" data-tab="learn">학습</div>
+    <div class="tab" data-tab="train">훈련</div>
+    <div class="tab" data-tab="review">틀린 문장 복습</div>
+    <div class="tab" data-tab="stats">진도</div>
+    <div class="tab" data-tab="manage">문장 관리</div>
+    <div class="tab" data-tab="alarm">알람</div>
+  </div>
+
+  <!-- ALPHABET -->
+  <section id="alphabet">
+    <div class="card">
+      <h2 style="margin-top:0">🔤 알파벳 발음 연습</h2>
+      <p class="hint">인도네시아어는 영어와 같은 26글자(라틴 문자)를 쓰지만 <b>글자 이름 읽는 법이 달라요.</b>
+      글자를 누르면 발음을 들려주고, 예시 단어도 보여줍니다. 🎤 버튼으로 따라 말해 채점할 수 있어요.</p>
+      <div id="alphaGrid" class="wordchips"></div>
+    </div>
+    <div class="card" id="alphaCard" style="display:none">
+      <div id="alphaCatpill"></div>
+      <p class="eng" id="alphaLetter" style="font-size:48px">A</p>
+      <p class="kor" id="alphaName"></p>
+      <div class="meta" id="alphaExample"></div>
+      <div class="row">
+        <button class="primary" id="alphaPlay">🔊 글자 발음</button>
+        <button id="alphaPlayWord">🔊 예시 단어</button>
+        <button id="alphaRec">🎤 따라 말하기</button>
+      </div>
+      <div class="result" id="alphaResult"></div>
+      <div class="row">
+        <button id="alphaPrev">⬅️ 이전</button>
+        <button class="primary" id="alphaNext">다음 글자 ➡️</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- LEARN -->
+  <section id="learn" style="display:none">
+    <div class="card" id="cardLearn">
+      <div id="catpill"></div>
+      <p class="eng" id="eng">로딩 중...</p>
+      <p class="kor" id="kor"></p>
+      <div class="meta" id="meta"></div>
+
+      <div id="wordChips" class="wordchips"></div>
+      <div id="wordInfo" class="wordinfo"></div>
+
+      <div class="row">
+        <button class="primary" id="btnPlay">🔊 발음 듣기</button>
+        <button id="btnSlow">🐢 천천히</button>
+        <button id="btnRec">🎤 따라 말하기</button>
+        <button id="btnShowKor">👁️ 뜻 보기</button>
+      </div>
+
+      <div class="result" id="recResult"></div>
+
+      <div class="row">
+        <button id="btnPrev">⬅️ 이전</button>
+        <button class="primary" id="btnNext">다음 문장 ➡️</button>
+      </div>
+    </div>
+    <p class="hint">팁: 문장이 자동으로 입에서 나올 때까지 🔊듣고 → 🎤따라 말하기를 반복하세요.
+    충분히 외웠다면 <b>훈련 탭</b>에서 한글만 보고 인도네시아어로 말해 테스트하세요.</p>
+  </section>
+
+  <!-- TRAIN -->
+  <section id="train" style="display:none">
+    <div class="card">
+      <div id="trCatpill"></div>
+      <p class="meta" style="margin-bottom:4px">아래 뜻을 인도네시아어로 말해보세요 👇</p>
+      <p class="eng" id="trKor">로딩 중...</p>
+      <div class="row">
+        <button class="primary" id="trBtnRec">🎤 인니어로 말하기</button>
+        <button id="trBtnReveal">👁️ 정답 보기</button>
+        <button id="trBtnSkip">건너뛰기</button>
+      </div>
+      <div class="result" id="trResult"></div>
+      <div class="row" id="trManualRow" style="display:none">
+        <button class="good" id="trPass">✅ 맞았어요</button>
+        <button class="bad" id="trFail">🔁 다시 (반복)</button>
+      </div>
+    </div>
+    <p class="hint">한글 뜻을 보고 인도네시아어로 말하면 음성인식이 채점합니다.
+    <b>80점 이상이면 자동 통과</b>(박스↑), 그 미만이면 반복 대상이 됩니다.
+    마이크 없이 연습하려면 👁️정답 보기 후 직접 채점하세요.</p>
+  </section>
+
+  <!-- REVIEW -->
+  <section id="review" style="display:none">
+    <div class="card">
+      <h2 style="margin-top:0">틀린 문장 / 복습 대기</h2>
+      <div id="reviewList"></div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section id="stats" style="display:none">
+    <div class="card">
+      <h2 style="margin-top:0">진도</h2>
+      <div class="stat" id="statGrid"></div>
+      <div class="meta" style="margin-top:16px">라이트너 박스: 1=새 문장/틀림 → 5=완전 암기. 박스가 높을수록 오랜만에 다시 나옵니다.</div>
+      <div id="boxBars" style="margin-top:14px"></div>
+      <div class="row" style="margin-top:18px">
+        <button id="btnExportProgress">진도 백업(내보내기)</button>
+        <button class="bad" id="btnReset">진도 초기화</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- MANAGE -->
+  <section id="manage" style="display:none">
+    <div class="card">
+      <h2 style="margin-top:0">문장 추가/관리</h2>
+      <p class="hint">한 줄에 하나씩, <code>인도네시아어 문장 | 한국어 뜻 | 카테고리</code> 형식으로 입력 후 추가하세요.
+      (카테고리 생략 가능)</p>
+      <textarea id="addBox" placeholder="Sampai jumpa besok. | 내일 봐요. | 인사
+Boleh saya minta tolong? | 부탁 좀 해도 될까요? | 부탁"></textarea>
+      <div class="row">
+        <button class="primary" id="btnAdd">➕ 문장 추가</button>
+        <button id="btnExportAll">전체 문장 내보내기(.json)</button>
+        <label class="pill" style="cursor:pointer">📂 불러오기<input type="file" id="importFile" accept=".json" hidden></label>
+      </div>
+      <div class="meta" id="manageCount" style="margin-top:12px"></div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">전체 문장 목록</h3>
+      <div id="allList"></div>
+    </div>
+  </section>
+
+  <!-- ALARM -->
+  <section id="alarm" style="display:none">
+    <div class="card">
+      <h2 style="margin-top:0">🔔 매일 학습 알람</h2>
+      <p class="meta">매일 알림 받을 시간을 정하세요.</p>
+      <div class="row" style="align-items:center">
+        <input type="time" id="alarmTime" value="21:00"
+          style="font-size:20px;padding:8px 12px;background:var(--card2);
+          color:var(--txt);border:1px solid var(--line);border-radius:10px">
+      </div>
+
+      <h3>① 캘린더 알람 (앱을 꺼도 알림 받기 · 추천)</h3>
+      <p class="hint">버튼을 누르면 "매일 반복" 알람 파일이 다운로드돼요.
+      파일을 열어 폰 캘린더에 추가하면, 매일 그 시간에 폰이 알려줍니다.</p>
+      <div class="row">
+        <button class="primary" id="btnIcs">📅 매일 알람 캘린더에 추가</button>
+      </div>
+
+      <h3 style="margin-top:24px">② 앱 내 알림 (앱이 열려 있을 때)</h3>
+      <p class="hint">알림을 허용하면, 앱을 켜둔 상태에서 정한 시간에 알림이 떠요.</p>
+      <div class="row">
+        <button id="btnNotifPerm">🔔 알림 권한 허용</button>
+      </div>
+      <div class="meta" id="alarmStatus" style="margin-top:12px"></div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">오늘의 학습</h3>
+      <div id="todayStatus" class="meta"></div>
+    </div>
+  </section>
+</div>
+
+<script>
+/* ---------- 기본 생활 인도네시아어 문장 세트 ----------
+   형식: [인도네시아어, 한국어 뜻, 카테고리] */
+const SEED = [
+ // 인사 & 기본
+ ["Halo, apa kabar?","안녕하세요, 잘 지내세요?","인사"],
+ ["Selamat pagi!","좋은 아침이에요!","인사"],
+ ["Selamat siang.","안녕하세요. (낮 인사)","인사"],
+ ["Selamat sore.","안녕하세요. (오후 인사)","인사"],
+ ["Selamat malam.","안녕하세요. (저녁 인사)","인사"],
+ ["Sampai jumpa!","또 봐요!","인사"],
+ ["Sampai besok.","내일 봐요.","인사"],
+ ["Sampai nanti.","나중에 봐요.","인사"],
+ ["Hati-hati di jalan.","조심히 가세요.","인사"],
+ ["Senang bertemu denganmu.","만나서 반가워요.","인사"],
+ ["Lama tidak bertemu.","오랜만이에요.","인사"],
+ ["Apa kabar hari ini?","오늘 어떻게 지내세요?","인사"],
+ ["Kabar baik, terima kasih.","잘 지내요, 고마워요.","인사"],
+ ["Salam kenal.","처음 뵙겠습니다.","인사"],
+ ["Selamat datang!","환영합니다!","인사"],
+ ["Selamat tidur.","잘 자요.","인사"],
+ // 자기소개
+ ["Nama saya Andi.","제 이름은 안디예요.","자기소개"],
+ ["Siapa nama kamu?","이름이 뭐예요?","자기소개"],
+ ["Saya dari Korea.","저는 한국에서 왔어요.","자기소개"],
+ ["Kamu dari mana?","어디서 오셨어요?","자기소개"],
+ ["Saya tinggal di Jakarta.","저는 자카르타에 살아요.","자기소개"],
+ ["Apa pekerjaan kamu?","무슨 일 하세요?","자기소개"],
+ ["Saya seorang guru.","저는 선생님이에요.","자기소개"],
+ ["Saya belajar bahasa Indonesia.","저는 인도네시아어를 배워요.","자기소개"],
+ ["Umur saya tiga puluh tahun.","저는 서른 살이에요.","자기소개"],
+ ["Senang berkenalan dengan Anda.","알게 되어 반가워요.","자기소개"],
+ // 부탁 & 도움
+ ["Bisa tolong saya?","도와주실 수 있어요?","부탁"],
+ ["Boleh saya minta tolong?","부탁 좀 해도 될까요?","부탁"],
+ ["Tolong ulangi sekali lagi.","다시 한 번 말해주세요.","부탁"],
+ ["Tolong bicara lebih pelan.","좀 더 천천히 말해주세요.","부탁"],
+ ["Bisa tolong ambilkan itu?","저것 좀 집어줄래요?","부탁"],
+ ["Tidak masalah.","문제 없어요.","부탁"],
+ ["Tentu saja.","물론이죠.","부탁"],
+ ["Terima kasih banyak.","정말 고마워요.","부탁"],
+ ["Sama-sama.","천만에요.","부탁"],
+ ["Permisi.","실례합니다.","부탁"],
+ ["Maaf merepotkan.","번거롭게 해서 죄송해요.","부탁"],
+ // 여행 & 길찾기
+ ["Di mana stasiun kereta?","기차역이 어디예요?","여행"],
+ ["Bagaimana cara ke bandara?","공항에 어떻게 가요?","여행"],
+ ["Apakah jauh dari sini?","여기서 멀어요?","여행"],
+ ["Berapa lama perjalanannya?","얼마나 걸려요?","여행"],
+ ["Saya tersesat.","길을 잃었어요.","여행"],
+ ["Di mana toilet?","화장실이 어디예요?","여행"],
+ ["Tolong antar ke alamat ini.","이 주소로 데려다 주세요.","여행"],
+ ["Berapa ongkosnya?","요금이 얼마예요?","여행"],
+ ["Saya mau check-in.","체크인 하고 싶어요.","여행"],
+ ["Apakah ada kamar kosong?","빈 방 있어요?","여행"],
+ ["Belok kiri di sana.","저기서 왼쪽으로 가세요.","여행"],
+ ["Lurus saja.","쭉 직진하세요.","여행"],
+ // 식당
+ ["Saya mau pesan.","주문할게요.","식당"],
+ ["Boleh lihat menunya?","메뉴 볼 수 있을까요?","식당"],
+ ["Apa yang Anda rekomendasikan?","뭘 추천하세요?","식당"],
+ ["Saya mau yang ini.","이걸로 할게요.","식당"],
+ ["Tolong jangan terlalu pedas.","너무 맵지 않게 해주세요.","식당"],
+ ["Apakah ini pedas?","이거 매워요?","식당"],
+ ["Minta air putih.","물 주세요.","식당"],
+ ["Minta bonnya.","계산서 주세요.","식당"],
+ ["Enak sekali!","정말 맛있어요!","식당"],
+ ["Bisa bayar pakai kartu?","카드로 결제돼요?","식당"],
+ ["Bungkus, ya.","포장해 주세요.","식당"],
+ ["Satu kopi, tolong.","커피 한 잔 주세요.","식당"],
+ // 쇼핑
+ ["Berapa harganya?","이거 얼마예요?","쇼핑"],
+ ["Boleh kurang?","좀 깎아줄 수 있어요?","쇼핑"],
+ ["Terlalu mahal.","너무 비싸요.","쇼핑"],
+ ["Saya hanya lihat-lihat.","그냥 구경하는 거예요.","쇼핑"],
+ ["Ada ukuran yang lebih kecil?","더 작은 사이즈 있어요?","쇼핑"],
+ ["Boleh saya coba?","입어봐도 돼요?","쇼핑"],
+ ["Saya ambil yang ini.","이걸로 할게요.","쇼핑"],
+ ["Apakah ada diskon?","할인 있어요?","쇼핑"],
+ ["Bayar di mana?","어디서 계산해요?","쇼핑"],
+ // 의견 & 감정
+ ["Saya rasa kamu benar.","당신 말이 맞는 것 같아요.","의견"],
+ ["Saya tidak yakin.","잘 모르겠어요.","의견"],
+ ["Itu masuk akal.","말이 되네요.","의견"],
+ ["Saya setuju.","동의해요.","의견"],
+ ["Saya tidak setuju.","동의하지 않아요.","의견"],
+ ["Itu tergantung.","상황에 따라 달라요.","의견"],
+ ["Kedengarannya bagus.","좋은 생각이에요.","의견"],
+ ["Saya senang sekali.","정말 기뻐요.","감정"],
+ ["Saya sedikit lelah hari ini.","오늘 좀 피곤해요.","감정"],
+ ["Jangan khawatir.","걱정하지 마세요.","감정"],
+ ["Saya turut sedih.","안타깝네요.","감정"],
+ ["Saya kangen kamu.","보고 싶어요.","감정"],
+ // 일상 & 스몰토크
+ ["Jam berapa sekarang?","지금 몇 시예요?","일상"],
+ ["Saya akan terlambat.","좀 늦을 것 같아요.","일상"],
+ ["Ayo minum kopi.","커피 한잔해요.","일상"],
+ ["Cuaca hari ini bagus.","오늘 날씨 좋네요.","일상"],
+ ["Saya segera kembali.","금방 올게요.","일상"],
+ ["Tunggu sebentar.","잠깐만요.","일상"],
+ ["Terserah kamu.","당신이 정하세요.","일상"],
+ ["Biar saya pikirkan dulu.","좀 생각해 볼게요.","일상"],
+ ["Mungkin lain kali.","다음에 하죠.","일상"],
+ ["Saya lapar.","배고파요.","일상"],
+ ["Saya haus.","목말라요.","일상"],
+ ["Saya mengerti.","알겠어요.","일상"],
+ ["Saya tidak mengerti.","이해 못 했어요.","일상"],
+ ["Hari ini hari apa?","오늘 무슨 요일이에요?","일상"],
+ ["Besok saya sibuk.","내일 바빠요.","일상"],
+ // 전화 & 직장
+ ["Bisa saya tinggalkan pesan?","메시지 남겨도 될까요?","직장"],
+ ["Tunggu sebentar, ya.","잠시만 기다려 주세요.","직장"],
+ ["Bisa telepon saya kembali?","다시 전화 주실래요?","직장"],
+ ["Mari kita atur jadwal rapat.","회의 일정을 잡읍시다.","직장"],
+ ["Saya akan kirim email.","이메일 보낼게요.","직장"],
+ ["Saya sedang dalam perjalanan.","가는 중이에요.","직장"],
+ ["Bisa kita jadwal ulang?","일정 변경 가능할까요?","직장"],
+ // 사과 & 문제상황
+ ["Maaf, itu salah saya.","죄송해요, 제 실수예요.","사과"],
+ ["Maaf mengganggu.","방해해서 죄송해요.","사과"],
+ ["Tidak apa-apa.","괜찮아요.","사과"],
+ ["Saya tidak dengar tadi.","아까 못 들었어요.","사과"],
+ ["Sudahlah, tidak penting.","됐어요, 신경 쓰지 마세요.","사과"],
+ ["Maafkan saya.","용서해 주세요.","사과"]
+];
+
+/* ---------- 저장소 (localStorage 차단 시 메모리 폴백) ---------- */
+const LS_SENT='it_sentences_v1', LS_PROG='it_progress_v1';
+const mem={};
+function lsGet(k){try{return localStorage.getItem(k)}catch(e){return mem[k]||null}}
+function lsSet(k,v){try{localStorage.setItem(k,v)}catch(e){mem[k]=v}}
+function loadSentences(){
+  const raw=lsGet(LS_SENT);
+  if(raw){try{return JSON.parse(raw)}catch(e){}}
+  let s;
+  if(window.EMBEDDED_SENTENCES && window.EMBEDDED_SENTENCES.length){
+    s=window.EMBEDDED_SENTENCES.map((x,i)=>({id:x.id||'e'+i,eng:x.eng,kor:x.kor,cat:x.cat||'기타'}));
+  }else{
+    s=SEED.map((x,i)=>({id:'s'+i,eng:x[0],kor:x[1],cat:x[2]||'기타'}));
+  }
+  lsSet(LS_SENT,JSON.stringify(s));
+  return s;
+}
+function saveSentences(s){lsSet(LS_SENT,JSON.stringify(s))}
+function loadProgress(){
+  const raw=lsGet(LS_PROG);
+  if(raw){try{return JSON.parse(raw)}catch(e){}}
+  return {};
+}
+function saveProgress(p){lsSet(LS_PROG,JSON.stringify(p))}
+
+let sentences=loadSentences();
+let progress=loadProgress(); // id -> {box, due, seen, correct, lastWrong}
+
+// 박스별 간격(초). 1=즉시 다시, 5=거의 통과
+const BOX_INTERVAL=[0,0,60*5,60*60*8,60*60*24*2,60*60*24*7];
+function prog(id){
+  if(!progress[id]) progress[id]={box:1,due:0,seen:0,correct:0,lastWrong:false};
+  return progress[id];
+}
+
+/* ---------- 다음 문장 선택 ---------- */
+let current=null, learnIdx=0;
+function pickNext(){
+  const now=Date.now()/1000;
+  const arr=sentences.map(s=>({s,p:prog(s.id)}));
+  let due=arr.filter(x=>x.p.due<=now);
+  if(due.length===0) due=arr;
+  due.sort((a,b)=>{
+    if(a.p.box!==b.p.box) return a.p.box-b.p.box;
+    return a.p.due-b.p.due;
+  });
+  return due[0].s;
+}
+
+/* ---------- 음성 합성 (인도네시아어) ---------- */
+let idVoice=null, idVoices=[];
+// 자연스러운(신경망) 음성일수록 높은 점수
+function voiceScore(v){
+  let s=0; const n=v.name.toLowerCase();
+  if(/id[-_]id/i.test(v.lang)) s+=40; else if(/^id/i.test(v.lang)) s+=30;
+  if(/natural|neural/.test(n)) s+=50;     // Microsoft ... Online (Natural)
+  if(/google/.test(n)) s+=45;             // Chrome: Google Bahasa Indonesia
+  if(/online/.test(n)) s+=30;
+  if(/gadis|andika|ardi/.test(n)) s+=20;  // MS 인도네시아어 음성 이름
+  if(/espeak|robot|compact/.test(n)) s-=40;
+  return s;
+}
+function buildVoiceList(){
+  const all=speechSynthesis.getVoices();
+  idVoices=all.filter(v=>/^id/i.test(v.lang)).sort((a,b)=>voiceScore(b)-voiceScore(a));
+  const sel=document.getElementById('voiceSel');
+  if(sel){
+    if(idVoices.length){
+      sel.innerHTML=idVoices.map((v,i)=>
+        `<option value="${i}">${v.name.slice(0,32)} (${v.lang})</option>`).join('');
+      idVoice=idVoices[0]; sel.value='0';
+      sel.onchange=()=>{idVoice=idVoices[+sel.value]; if(current) speak(current.eng);};
+    }else{
+      sel.innerHTML='<option>인도네시아어 음성 없음 (id-ID)</option>';
+      idVoice=null;
+    }
+  }
+}
+speechSynthesis.onvoiceschanged=buildVoiceList; buildVoiceList();
+setTimeout(buildVoiceList,300); // 일부 브라우저는 늦게 로드됨
+function speak(text,rate,onend){
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  if(idVoice) u.voice=idVoice;
+  u.lang=(idVoice&&idVoice.lang)||'id-ID';
+  u.rate=rate||parseFloat(document.getElementById('rate').value)||0.9;
+  u.pitch=1; if(onend) u.onend=onend; speechSynthesis.speak(u);
+}
+// 준비 완료 알림음
+function beep(){
+  try{const ctx=new (window.AudioContext||window.webkitAudioContext)();
+    const o=ctx.createOscillator(),g=ctx.createGain();
+    o.connect(g);g.connect(ctx.destination);o.frequency.value=880;
+    g.gain.setValueAtTime(0.15,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.18);
+    o.start();o.stop(ctx.currentTime+0.18);}catch(e){}
+}
+
+/* ---------- 음성 인식 ---------- */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let recog=null, recognizing=false;
+function normalize(t){return t.toLowerCase().replace(/[^a-z0-9'\s-]/g,'').replace(/\s+/g,' ').trim()}
+function compare(target,said){
+  const a=normalize(target).split(' '), b=normalize(said).split(' ');
+  const bset={}; b.forEach(w=>bset[w]=(bset[w]||0)+1);
+  let hit=0; const marks=a.map(w=>{
+    if(bset[w]>0){bset[w]--;hit++;return {w,ok:true}} return {w,ok:false};
+  });
+  return {score:Math.round(hit/a.length*100),marks};
+}
+// 마이크 녹음(내 발음 듣기용)
+let mediaRecorder=null, myVoiceUrl=null, voiceTarget='learn', recordActive=false;
+function micMode(){return document.getElementById('micMode').value}
+function recBtnId(){return voiceTarget==='train'?'trBtnRec':'btnRec'}
+async function startVoiceRecording(target){
+  voiceTarget=target||'learn';
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    const chunks=[];
+    mediaRecorder=new MediaRecorder(stream);
+    mediaRecorder.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data)};
+    mediaRecorder.onstop=()=>{
+      if(myVoiceUrl) URL.revokeObjectURL(myVoiceUrl);
+      myVoiceUrl=URL.createObjectURL(new Blob(chunks,{type:mediaRecorder.mimeType}));
+      stream.getTracks().forEach(t=>t.stop());
+      recordActive=false;
+      const b=document.getElementById(recBtnId());
+      if(b) b.textContent=voiceTarget==='train'?'🎤 인니어로 말하기':'🎤 따라 말하기';
+      showMyVoiceButton();
+    };
+    mediaRecorder.start();
+  }catch(e){ mediaRecorder=null; }
+}
+function stopVoiceRecording(){
+  if(mediaRecorder&&mediaRecorder.state!=='inactive') mediaRecorder.stop();
+}
+async function recordToggle(target){
+  if(recordActive){ stopVoiceRecording(); return; }
+  voiceTarget=target||'learn';
+  const res=document.getElementById(target==='train'?'trResult':'recResult');
+  recordActive=true;
+  beep();
+  if(res) res.innerHTML='<span style="color:var(--bad);font-weight:700;font-size:18px">🔴 녹음 중… (버튼 다시 누르면 정지)</span>';
+  const b=document.getElementById(recBtnId()); if(b) b.textContent='⏹️ 녹음 정지';
+  await startVoiceRecording(target);
+}
+function showMyVoiceButton(){
+  if(!myVoiceUrl) return;
+  const isTrain=voiceTarget==='train';
+  const res=document.getElementById(isTrain?'trResult':'recResult');
+  const btnId=isTrain?'btnTrMyVoice':'btnMyVoice';
+  if(!res||document.getElementById(btnId)) return;
+  const eng=(isTrain?trCurrent:current).eng;
+  const div=document.createElement('div'); div.style.marginTop='10px';
+  div.innerHTML=`<button id="${btnId}">🎧 내 발음 듣기</button>`+
+    `<button id="${btnId}N" style="margin-left:8px">🔊 원어민 발음 듣기</button>`;
+  res.appendChild(div);
+  document.getElementById(btnId).onclick=()=>{new Audio(myVoiceUrl).play()};
+  document.getElementById(btnId+'N').onclick=()=>speak(eng);
+}
+async function startRec(){
+  if(micMode()==='record'){ recordToggle('learn'); return; }
+  if(!SR){document.getElementById('recResult').innerHTML=
+    '<span class="w-bad">이 브라우저는 음성인식을 지원하지 않아요. 크롬을 사용하세요.</span>';return}
+  recognizing=true;
+  document.getElementById('btnRec').textContent='🎙️ 준비 중...';
+  document.getElementById('recResult').innerHTML='<span class="meta">🎤 마이크 준비 중...</span>';
+  recog=new SR(); recog.lang='id-ID'; recog.interimResults=false; recog.maxAlternatives=1;
+  recog.onstart=()=>{
+    beep();
+    document.getElementById('btnRec').textContent='🎙️ 듣는 중...';
+    document.getElementById('recResult').innerHTML=
+      '<span style="color:var(--good);font-weight:700;font-size:18px">🎙️ 지금 말하세요!</span>';
+  };
+  recog.onresult=e=>{
+    const said=e.results[0][0].transcript;
+    const {score,marks}=compare(current.eng,said);
+    const html=marks.map(m=>`<span class="${m.ok?'w-ok':'w-bad'}">${m.w}</span>`).join(' ');
+    document.getElementById('recResult').innerHTML=
+      `<div class="score" style="color:${score>=80?'var(--good)':score>=50?'var(--warn)':'var(--bad)'}">${score}점</div>`+
+      `<div>${html}</div>`+
+      `<div class="meta">내가 말한 것: "${said}"</div>`;
+    showMyVoiceButton();
+  };
+  recog.onerror=e=>{document.getElementById('recResult').innerHTML=
+    `<span class="w-bad">인식 오류: ${e.error} (마이크 권한을 확인하세요)</span>`};
+  recog.onend=()=>{recognizing=false;document.getElementById('btnRec').textContent='🎤 따라 말하기';
+    stopVoiceRecording();};
+  recog.start();
+}
+
+/* ---------- 화면 렌더 ---------- */
+function renderLearn(){
+  if(learnIdx<0) learnIdx=sentences.length-1;
+  if(learnIdx>=sentences.length) learnIdx=0;
+  current=sentences[learnIdx];
+  const p=prog(current.id);
+  document.getElementById('catpill').innerHTML=
+    `<span class="pill">${current.cat}</span>`+
+    `<span class="pill">${learnIdx+1} / ${sentences.length}</span>`+
+    `<span class="pill">${p.seen}회 학습</span>`;
+  document.getElementById('eng').textContent=current.eng;
+  document.getElementById('kor').textContent=current.kor;
+  document.getElementById('kor').style.display='none';
+  document.getElementById('meta').textContent='';
+  document.getElementById('recResult').innerHTML='';
+  renderWordChips(current.eng);
+  prog(current.id).studied=true;
+  saveProgress(progress);
+  markStudiedToday();
+  lsSet('it_learnidx', String(learnIdx));
+  const auto=document.getElementById('autoplay').checked;
+  const flow=document.getElementById('autoflow').checked;
+  if(auto){
+    speak(current.eng, null, ()=>{ if(flow && SR && micMode()==='score') startRec(); });
+  } else if(flow && SR && micMode()==='score'){
+    startRec();
+  }
+}
+
+/* ---------- 단어 사전 (인니어 → 한국어) ---------- */
+const dictCache={};
+function renderWordChips(sentence){
+  const words=[...new Set(sentence.split(/\s+/)
+    .map(w=>w.replace(/[^A-Za-z'-]/g,'')).filter(w=>w.length>1))];
+  const chips=document.getElementById('wordChips');
+  chips.innerHTML=words.map(w=>`<span class="wchip" data-w="${w.toLowerCase()}">${w}</span>`).join('');
+  document.getElementById('wordInfo').innerHTML=
+    '<span class="meta">단어를 누르면 발음과 뜻을 볼 수 있어요.</span>';
+  chips.querySelectorAll('.wchip').forEach(c=>c.onclick=()=>{
+    chips.querySelectorAll('.wchip').forEach(x=>x.classList.remove('active'));
+    c.classList.add('active'); lookupWord(c.dataset.w);
+  });
+}
+// 구글 번역 무료 엔드포인트로 인니어→한국어 뜻 가져오기
+async function translateTo(text,tl){
+  const url='https://translate.googleapis.com/translate_a/single?client=gtx&sl=id&tl='+tl+'&dt=t&q='+encodeURIComponent(text);
+  const r=await fetch(url); const d=await r.json();
+  return d[0].map(seg=>seg[0]).join('');
+}
+async function lookupWord(word){
+  speak(word);
+  const info=document.getElementById('wordInfo');
+  if(dictCache[word]){info.innerHTML=dictCache[word];return}
+  info.innerHTML='<span class="meta">인니어 사전 찾는 중...</span>';
+  const ko=await translateTo(word,'ko').catch(()=>'');
+  const en=await translateTo(word,'en').catch(()=>'');
+  let html=`<div><b style="font-size:18px">${word}</b></div>`+
+    `<div class="def" style="font-size:18px;margin-top:6px">🇰🇷 ${ko||'(뜻을 가져오지 못함)'}</div>`+
+    (en?`<div class="ex" style="margin-top:4px">🇬🇧 ${en}</div>`:'')+
+    `<div class="meta" style="margin-top:8px"><a href="https://www.kamus.net/indonesia/korea/${encodeURIComponent(word)}" target="_blank">📖 사전에서 더 보기</a></div>`;
+  dictCache[word]=html; info.innerHTML=html;
+}
+function gradeItem(item,pass){
+  const p=prog(item.id); p.seen++;
+  if(pass){p.box=Math.min(5,p.box+1);p.correct++;p.lastWrong=false}
+  else{p.box=1;p.lastWrong=true}
+  p.due=Date.now()/1000+BOX_INTERVAL[p.box];
+  saveProgress(progress); refreshStats();
+}
+
+/* ---------- 훈련 탭: 한글 보고 인니어로 말하기 ---------- */
+let trCurrent=null, trRecognizing=false;
+function pickRandom(){
+  const studied=sentences.filter(s=>prog(s.id).studied);
+  if(studied.length===0) return null;
+  const now=Date.now()/1000;
+  let pool=studied.filter(s=>prog(s.id).due<=now);
+  if(pool.length===0) pool=studied;
+  let s=pool[Math.floor(Math.random()*pool.length)];
+  if(pool.length>1 && trCurrent && s.id===trCurrent.id)
+    s=pool[(pool.indexOf(s)+1)%pool.length];
+  return s;
+}
+function renderTrain(){
+  trCurrent=pickRandom();
+  if(!trCurrent){
+    document.getElementById('trCatpill').innerHTML='';
+    document.getElementById('trKor').textContent='먼저 학습 탭에서 문장을 학습해 주세요.';
+    document.getElementById('trResult').innerHTML=
+      '<span class="meta">학습 탭에서 본 문장만 훈련에 나옵니다.</span>';
+    document.getElementById('trManualRow').style.display='none';
+    return;
+  }
+  const p=prog(trCurrent.id);
+  document.getElementById('trCatpill').innerHTML=
+    `<span class="pill">${trCurrent.cat}</span><span class="pill">박스 ${p.box}/5</span>`+
+    `<span class="pill">${p.seen}회</span>`;
+  document.getElementById('trKor').textContent=trCurrent.kor||'(뜻 없음)';
+  document.getElementById('trResult').innerHTML='';
+  document.getElementById('trManualRow').style.display='none';
+  if(document.getElementById('autoflow').checked && SR && micMode()==='score' && !trRecognizing)
+    setTimeout(()=>{ if(!trRecognizing) trStartRec(); },700);
+}
+async function trStartRec(){
+  if(!trCurrent) return;
+  if(micMode()==='record'){ recordToggle('train'); return; }
+  if(!SR){document.getElementById('trResult').innerHTML=
+    '<span class="w-bad">이 브라우저는 음성인식을 지원하지 않아요. 크롬을 사용하세요.</span>';return}
+  trRecognizing=true;
+  document.getElementById('trBtnRec').textContent='🎙️ 준비 중...';
+  document.getElementById('trResult').innerHTML='<span class="meta">🎤 마이크 준비 중...</span>';
+  const rec=new SR(); rec.lang='id-ID'; rec.interimResults=false; rec.maxAlternatives=1;
+  rec.onstart=()=>{ beep();
+    document.getElementById('trBtnRec').textContent='🎙️ 듣는 중...';
+    document.getElementById('trResult').innerHTML=
+      '<span style="color:var(--good);font-weight:700;font-size:18px">🎙️ 지금 말하세요!</span>';};
+  rec.onresult=e=>{
+    const said=e.results[0][0].transcript;
+    const {score,marks}=compare(trCurrent.eng,said);
+    const pass=score>=80;
+    const html=marks.map(m=>`<span class="${m.ok?'w-ok':'w-bad'}">${m.w}</span>`).join(' ');
+    document.getElementById('trResult').innerHTML=
+      `<div class="score" style="color:${pass?'var(--good)':score>=50?'var(--warn)':'var(--bad)'}">${score}점 ${pass?'✅ 통과':'🔁 반복'}</div>`+
+      `<div><b>정답:</b> ${html}</div>`+
+      `<div class="meta">내가 말한 것: "${said}"</div>`;
+    speak(trCurrent.eng);
+    gradeItem(trCurrent,pass);
+    if(pass){ setTimeout(renderTrain,1800); }
+    else{ document.getElementById('trManualRow').style.display='flex'; }
+  };
+  rec.onerror=e=>{document.getElementById('trResult').innerHTML=
+    `<span class="w-bad">인식 오류: ${e.error} (마이크 권한 확인)</span>`};
+  rec.onend=()=>{trRecognizing=false;document.getElementById('trBtnRec').textContent='🎤 인니어로 말하기';
+    stopVoiceRecording();};
+  rec.start();
+}
+
+function refreshStats(){
+  const total=sentences.length;
+  let seen=0,mastered=0,wrong=0,boxes=[0,0,0,0,0,0];
+  sentences.forEach(s=>{const p=prog(s.id);
+    if(p.seen>0)seen++; if(p.box>=5)mastered++; if(p.lastWrong)wrong++; boxes[p.box]++;});
+  document.getElementById('statGrid').innerHTML=
+    box('전체 문장',total)+box('학습 시작',seen)+box('완전 암기',mastered)+box('복습 필요',wrong);
+  let bars='';
+  for(let i=1;i<=5;i++){const pct=total?Math.round(boxes[i]/total*100):0;
+    bars+=`<div class="meta">박스 ${i}: ${boxes[i]}개</div><div class="bar"><div style="width:${pct}%"></div></div>`;}
+  document.getElementById('boxBars').innerHTML=bars;
+  document.getElementById('manageCount').textContent=`총 ${total}개 문장`;
+}
+function box(l,n){return `<div class="box"><div class="num">${n}</div><div class="lbl">${l}</div></div>`}
+
+function renderReview(){
+  const now=Date.now()/1000;
+  const items=sentences.map(s=>({s,p:prog(s.id)}))
+    .filter(x=>x.p.lastWrong||(x.p.seen>0&&x.p.due<=now))
+    .sort((a,b)=>a.p.box-b.p.box);
+  const el=document.getElementById('reviewList');
+  if(items.length===0){el.innerHTML='<p class="kor">복습할 문장이 없어요. 잘하고 있어요! 🎉</p>';return}
+  el.innerHTML=items.map(x=>`
+    <div class="list-item">
+      <div><div class="e">${x.s.eng}</div><div class="k">${x.s.kor}</div></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="box-badge" style="background:var(--card2)">박스 ${x.p.box}</span>
+        <button onclick="speak('${x.s.eng.replace(/'/g,"\\'")}')">🔊</button>
+      </div>
+    </div>`).join('');
+}
+
+function renderAll(){
+  const el=document.getElementById('allList');
+  const groups={};
+  sentences.forEach(s=>{(groups[s.cat||'기타']=groups[s.cat||'기타']||[]).push(s)});
+  let html='';
+  Object.keys(groups).forEach(cat=>{
+    html+=`<div class="cat-header">📂 ${cat} <span>(${groups[cat].length})</span></div>`;
+    html+=groups[cat].map(s=>`
+      <div class="list-item">
+        <div><div class="e">${s.eng}</div><div class="k">${s.kor}</div></div>
+        <div style="display:flex;gap:6px">
+          <button onclick="speak('${s.eng.replace(/'/g,"\\'")}')">🔊</button>
+          <button class="bad" onclick="delSentence('${s.id}')">삭제</button>
+        </div>
+      </div>`).join('');
+  });
+  el.innerHTML=html;
+}
+function delSentence(id){
+  sentences=sentences.filter(s=>s.id!==id); saveSentences(sentences);
+  delete progress[id]; saveProgress(progress);
+  renderAll(); refreshStats();
+}
+
+/* ---------- 알파벳 발음 연습 ----------
+   [글자, TTS용 이름 읽기, 한글 근사음, 예시단어, 예시뜻] */
+const ALPHABET=[
+ ["A","a","아","api","불"],
+ ["B","be","베","buku","책"],
+ ["C","ce","쩨","cinta","사랑"],
+ ["D","de","데","dua","둘"],
+ ["E","e","에","enak","맛있다"],
+ ["F","ef","에프","foto","사진"],
+ ["G","ge","게","gula","설탕"],
+ ["H","ha","하","hari","날, 하루"],
+ ["I","i","이","ibu","엄마"],
+ ["J","je","제","jam","시계, 시"],
+ ["K","ka","까","kaki","다리, 발"],
+ ["L","el","엘","lima","다섯"],
+ ["M","em","엠","makan","먹다"],
+ ["N","en","엔","nasi","밥"],
+ ["O","o","오","obat","약"],
+ ["P","pe","뻬","pagi","아침"],
+ ["Q","ki","끼","Quran","꾸란"],
+ ["R","er","에르","rumah","집"],
+ ["S","es","에스","satu","하나"],
+ ["T","te","떼","tiga","셋"],
+ ["U","u","우","uang","돈"],
+ ["V","ve","페","visa","비자"],
+ ["W","we","웨","waktu","시간"],
+ ["X","eks","엑스","taksi","택시"],
+ ["Y","ye","예","ya","네, 응"],
+ ["Z","zet","젯","zebra","얼룩말"]
+];
+let alphaIdx=0, alphaRecognizing=false;
+function renderAlphaGrid(){
+  const g=document.getElementById('alphaGrid');
+  g.innerHTML=ALPHABET.map((a,i)=>`<span class="wchip" data-i="${i}" style="font-size:20px;min-width:38px;text-align:center">${a[0]}</span>`).join('');
+  g.querySelectorAll('.wchip').forEach(c=>c.onclick=()=>{alphaIdx=+c.dataset.i;renderAlpha(true);});
+}
+function renderAlpha(play){
+  if(alphaIdx<0) alphaIdx=ALPHABET.length-1;
+  if(alphaIdx>=ALPHABET.length) alphaIdx=0;
+  const a=ALPHABET[alphaIdx];
+  document.getElementById('alphaCard').style.display='block';
+  document.getElementById('alphaCatpill').innerHTML=
+    `<span class="pill">${alphaIdx+1} / ${ALPHABET.length}</span>`+
+    `<span class="pill">글자 이름: ${a[1]}</span>`;
+  document.getElementById('alphaLetter').textContent=a[0]+' / '+a[0].toLowerCase();
+  document.getElementById('alphaName').style.display='block';
+  document.getElementById('alphaName').innerHTML=`이름 읽기: <b>${a[1]}</b> (${a[2]})`;
+  document.getElementById('alphaExample').innerHTML=`📝 예시: <b>${a[3]}</b> — ${a[4]}`;
+  document.getElementById('alphaResult').innerHTML='';
+  document.getElementById('alphaGrid').querySelectorAll('.wchip').forEach((c,i)=>
+    c.classList.toggle('active',i===alphaIdx));
+  if(play) speak(a[1]);
+}
+function alphaStartRec(){
+  const a=ALPHABET[alphaIdx];
+  if(!SR){document.getElementById('alphaResult').innerHTML=
+    '<span class="w-bad">이 브라우저는 음성인식을 지원하지 않아요. 크롬을 사용하세요.</span>';return}
+  alphaRecognizing=true;
+  document.getElementById('alphaRec').textContent='🎙️ 준비 중...';
+  document.getElementById('alphaResult').innerHTML='<span class="meta">🎤 마이크 준비 중...</span>';
+  const rec=new SR(); rec.lang='id-ID'; rec.interimResults=false; rec.maxAlternatives=3;
+  rec.onstart=()=>{ beep();
+    document.getElementById('alphaRec').textContent='🎙️ 듣는 중...';
+    document.getElementById('alphaResult').innerHTML=
+      '<span style="color:var(--good);font-weight:700;font-size:18px">🎙️ 글자 이름을 말하세요!</span>';};
+  rec.onresult=e=>{
+    const alts=[]; for(let i=0;i<e.results[0].length;i++) alts.push(e.results[0][i].transcript);
+    const said=alts[0];
+    const targets=[a[1],a[0]].map(x=>x.toLowerCase());
+    const ok=alts.some(t=>targets.includes(normalize(t)));
+    document.getElementById('alphaResult').innerHTML=
+      `<div class="score" style="color:${ok?'var(--good)':'var(--warn)'}">${ok?'✅ 좋아요!':'🔁 다시 해볼까요?'}</div>`+
+      `<div class="meta">정답 발음: "${a[1]}" / 내가 말한 것: "${said}"</div>`;
+    speak(a[1]);
+  };
+  rec.onerror=e=>{document.getElementById('alphaResult').innerHTML=
+    `<span class="w-bad">인식 오류: ${e.error} (마이크 권한 확인)</span>`};
+  rec.onend=()=>{alphaRecognizing=false;document.getElementById('alphaRec').textContent='🎤 따라 말하기';};
+  rec.start();
+}
+document.getElementById('alphaPlay').onclick=()=>speak(ALPHABET[alphaIdx][1]);
+document.getElementById('alphaPlayWord').onclick=()=>speak(ALPHABET[alphaIdx][3]);
+document.getElementById('alphaRec').onclick=()=>{if(!alphaRecognizing)alphaStartRec()};
+document.getElementById('alphaPrev').onclick=()=>{alphaIdx--;renderAlpha(true);};
+document.getElementById('alphaNext').onclick=()=>{alphaIdx++;renderAlpha(true);};
+
+/* ---------- 이벤트 ---------- */
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');
+  ['alphabet','learn','train','review','stats','manage','alarm'].forEach(id=>
+    document.getElementById(id).style.display=id===t.dataset.tab?'block':'none');
+  if(t.dataset.tab==='alphabet')renderAlpha(false);
+  if(t.dataset.tab==='train')renderTrain();
+  if(t.dataset.tab==='alarm')renderAlarm();
+  if(t.dataset.tab==='review')renderReview();
+  if(t.dataset.tab==='stats')refreshStats();
+  if(t.dataset.tab==='manage'){renderAll();refreshStats()}
+});
+document.getElementById('btnPlay').onclick=()=>speak(current.eng);
+document.getElementById('btnSlow').onclick=()=>speak(current.eng,0.65);
+document.getElementById('btnRec').onclick=()=>{if(!recognizing)startRec()};
+document.getElementById('btnShowKor').onclick=()=>{
+  const k=document.getElementById('kor');k.style.display=k.style.display==='none'?'block':'none';};
+document.getElementById('btnNext').onclick=()=>{learnIdx++;renderLearn();};
+document.getElementById('btnPrev').onclick=()=>{learnIdx--;renderLearn();};
+document.getElementById('trBtnRec').onclick=()=>{if(!trRecognizing)trStartRec()};
+document.getElementById('trBtnReveal').onclick=()=>{
+  if(!trCurrent) return;
+  document.getElementById('trResult').innerHTML=
+    `<div style="font-size:22px;font-weight:700">${trCurrent.eng}</div>`;
+  speak(trCurrent.eng);
+  document.getElementById('trManualRow').style.display='flex';
+};
+document.getElementById('trBtnSkip').onclick=()=>renderTrain();
+document.getElementById('trPass').onclick=()=>{gradeItem(trCurrent,true);renderTrain();};
+document.getElementById('trFail').onclick=()=>{gradeItem(trCurrent,false);renderTrain();};
+
+document.getElementById('btnAdd').onclick=()=>{
+  const lines=document.getElementById('addBox').value.split('\n').map(l=>l.trim()).filter(Boolean);
+  let added=0;
+  lines.forEach(l=>{const p=l.split('|').map(x=>x.trim());
+    if(p[0]){sentences.push({id:'u'+Date.now()+Math.random().toString(36).slice(2,6),
+      eng:p[0],kor:p[1]||'',cat:p[2]||'추가'});added++;}});
+  saveSentences(sentences);document.getElementById('addBox').value='';
+  renderAll();refreshStats();alert(added+'개 문장을 추가했어요.');
+};
+document.getElementById('btnExportAll').onclick=()=>download('sentences.json',JSON.stringify(sentences,null,2));
+document.getElementById('btnExportProgress').onclick=()=>download('progress.json',JSON.stringify(progress,null,2));
+document.getElementById('importFile').onchange=e=>{
+  const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{try{const d=JSON.parse(r.result);
+    if(Array.isArray(d)){sentences=d;saveSentences(sentences);renderAll();refreshStats();
+      alert('문장 '+d.length+'개를 불러왔어요.');}
+  }catch(err){alert('파일을 읽을 수 없어요.')}};r.readAsText(f);
+};
+document.getElementById('btnReset').onclick=()=>{
+  if(confirm('학습 진도를 모두 초기화할까요? (문장은 유지됩니다)')){
+    progress={};saveProgress(progress);refreshStats();renderLearn();}
+};
+function download(name,content,type){
+  const b=new Blob([content],{type:type||'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.click();
+}
+
+/* ---------- 알람 ---------- */
+function todayStr(){return new Date().toISOString().slice(0,10)}
+function markStudiedToday(){lsSet('it_lastday',todayStr())}
+function renderAlarm(){
+  const t=lsGet('it_alarmtime'); if(t) document.getElementById('alarmTime').value=t;
+  const last=lsGet('it_lastday');
+  const done=last===todayStr();
+  document.getElementById('todayStatus').innerHTML= done
+    ? '<span style="color:var(--good);font-weight:700">✅ 오늘 학습 완료!</span>'
+    : '<span style="color:var(--warn)">아직 오늘 학습 전이에요. 학습 탭에서 시작해 보세요!</span>';
+  const perm=(window.Notification&&Notification.permission)||'unsupported';
+  document.getElementById('alarmStatus').textContent=
+    perm==='granted'?'알림 허용됨 ✅':perm==='denied'?'알림이 차단되어 있어요 (브라우저 설정에서 허용 필요)':
+    perm==='unsupported'?'이 브라우저는 알림을 지원하지 않아요.':'알림 권한이 아직 설정되지 않았어요.';
+}
+function pad(n){return String(n).padStart(2,'0')}
+function buildIcs(hhmm){
+  const [h,m]=hhmm.split(':').map(Number);
+  const now=new Date();
+  const dt=`${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}T${pad(h)}${pad(m)}00`;
+  const stamp=now.toISOString().replace(/[-:]/g,'').slice(0,15)+'Z';
+  const uid='it-'+Date.now()+'@indo-trainer';
+  return [
+    'BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//IndoTrainer//KO','CALSCALE:GREGORIAN',
+    'BEGIN:VEVENT',`UID:${uid}`,`DTSTAMP:${stamp}`,
+    `DTSTART:${dt}`,'RRULE:FREQ=DAILY','SUMMARY:🇮🇩 인도네시아어 학습/훈련 시간!',
+    'DESCRIPTION:생활 인도네시아어 암기 트레이너에서 학습하고 훈련하세요.',
+    'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:인도네시아어 학습 시간!','TRIGGER:PT0M',
+    'END:VALARM','END:VEVENT','END:VCALENDAR'
+  ].join('\r\n');
+}
+document.getElementById('alarmTime').onchange=e=>lsSet('it_alarmtime',e.target.value);
+document.getElementById('btnIcs').onclick=()=>{
+  const t=document.getElementById('alarmTime').value||'21:00';
+  lsSet('it_alarmtime',t);
+  download('indo-study-alarm.ics',buildIcs(t),'text/calendar');
+};
+document.getElementById('btnNotifPerm').onclick=async()=>{
+  if(!window.Notification){alert('이 브라우저는 알림을 지원하지 않아요.');return}
+  const p=await Notification.requestPermission(); renderAlarm();
+  if(p==='granted') new Notification('알림이 설정됐어요! 🔔',{body:'앱이 열려 있을 때 정한 시간에 알려드릴게요.'});
+};
+setInterval(()=>{
+  const t=lsGet('it_alarmtime'); if(!t||!window.Notification||Notification.permission!=='granted')return;
+  const now=new Date(); const cur=pad(now.getHours())+':'+pad(now.getMinutes());
+  if(cur===t && lsGet('it_notified')!==todayStr()){
+    lsSet('it_notified',todayStr());
+    new Notification('🇮🇩 인도네시아어 학습 시간!',{body:'오늘의 학습과 훈련을 시작해 보세요.'});
+  }
+},60000);
+
+// 마이크 모드 저장/복원
+const savedMic=lsGet('it_micmode'); if(savedMic) document.getElementById('micMode').value=savedMic;
+document.getElementById('micMode').onchange=e=>lsSet('it_micmode',e.target.value);
+// 이어서 학습: 저장된 위치 복원
+const savedIdx=parseInt(lsGet('it_learnidx')||'0',10);
+if(!isNaN(savedIdx)) learnIdx=savedIdx;
+document.getElementById('autoplay').checked=false;
+renderLearn();
+document.getElementById('autoplay').checked=true;
+refreshStats();
+renderAlphaGrid();
+renderAlpha(false);   // 첫 화면(알파벳 탭) 카드 표시 — 소리는 자동 재생 안 함
+</script>
+</body>
+</html>
