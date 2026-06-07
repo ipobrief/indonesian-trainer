@@ -529,6 +529,41 @@ function compare(target,said){
 let mediaRecorder=null, myVoiceUrl=null, voiceTarget='learn', recordActive=false;
 function micMode(){return document.getElementById('micMode').value}
 function recBtnId(){return voiceTarget==='train'?'trBtnRec':'btnRec'}
+let vadCtx=null, vadRAF=null;
+function stopVad(){
+  if(vadRAF){cancelAnimationFrame(vadRAF);vadRAF=null;}
+  if(vadCtx){try{vadCtx.close()}catch(e){} vadCtx=null;}
+}
+// 무음 감지: 말이 끝나면(또는 일정 시간 무음이면) 자동으로 녹음 정지
+function startVad(stream){
+  try{
+    vadCtx=new (window.AudioContext||window.webkitAudioContext)();
+    const src=vadCtx.createMediaStreamSource(stream);
+    const an=vadCtx.createAnalyser(); an.fftSize=1024;
+    src.connect(an);
+    const buf=new Float32Array(an.fftSize);
+    const t0=Date.now();
+    let spoke=false, lastLoud=Date.now();
+    const THRESH=0.018;      // 이 값보다 작으면 무음으로 간주
+    const SILENCE=1100;      // 말한 뒤 이만큼(ms) 조용하면 정지
+    const WAIT_START=6000;   // 처음부터 말이 없으면 이 시간(ms) 뒤 정지
+    const MAX=15000;         // 최대 녹음 시간(ms)
+    function loop(){
+      if(!recordActive){return;}
+      an.getFloatTimeDomainData(buf);
+      let sum=0; for(let i=0;i<buf.length;i++) sum+=buf[i]*buf[i];
+      const rms=Math.sqrt(sum/buf.length);
+      const now=Date.now();
+      if(rms>THRESH){ spoke=true; lastLoud=now; }
+      const tooLong=now-t0>MAX;
+      const noSpeechTimeout=!spoke && now-t0>WAIT_START;
+      const finishedSpeaking=spoke && now-lastLoud>SILENCE;
+      if(tooLong||noSpeechTimeout||finishedSpeaking){ stopVoiceRecording(); return; }
+      vadRAF=requestAnimationFrame(loop);
+    }
+    vadRAF=requestAnimationFrame(loop);
+  }catch(e){ /* VAD 미지원 시 수동 정지로 동작 */ }
+}
 async function startVoiceRecording(target){
   voiceTarget=target||'learn';
   try{
@@ -537,6 +572,7 @@ async function startVoiceRecording(target){
     mediaRecorder=new MediaRecorder(stream);
     mediaRecorder.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data)};
     mediaRecorder.onstop=()=>{
+      stopVad();
       if(myVoiceUrl) URL.revokeObjectURL(myVoiceUrl);
       myVoiceUrl=URL.createObjectURL(new Blob(chunks,{type:mediaRecorder.mimeType}));
       stream.getTracks().forEach(t=>t.stop());
@@ -546,7 +582,8 @@ async function startVoiceRecording(target){
       showMyVoiceButton();
     };
     mediaRecorder.start();
-  }catch(e){ mediaRecorder=null; }
+    startVad(stream);   // 자동 정지 감시 시작
+  }catch(e){ mediaRecorder=null; recordActive=false; }
 }
 function stopVoiceRecording(){
   if(mediaRecorder&&mediaRecorder.state!=='inactive') mediaRecorder.stop();
@@ -557,7 +594,7 @@ async function recordToggle(target){
   const res=document.getElementById(target==='train'?'trResult':'recResult');
   recordActive=true;
   beep();
-  if(res) res.innerHTML='<span style="color:var(--bad);font-weight:700;font-size:18px">🔴 녹음 중… (버튼 다시 누르면 정지)</span>';
+  if(res) res.innerHTML='<span style="color:var(--bad);font-weight:700;font-size:18px">🔴 녹음 중… (말이 끝나면 자동 정지 · 버튼 누르면 즉시 정지)</span>';
   const b=document.getElementById(recBtnId()); if(b) b.textContent='⏹️ 녹음 정지';
   await startVoiceRecording(target);
 }
@@ -608,6 +645,7 @@ async function startRec(){
 
 /* ---------- 화면 렌더 ---------- */
 function renderLearn(){
+  if(recordActive) stopVoiceRecording();   // 이전 문장 녹음 정리
   if(learnIdx<0) learnIdx=sentences.length-1;
   if(learnIdx>=sentences.length) learnIdx=0;
   current=sentences[learnIdx];
@@ -628,10 +666,13 @@ function renderLearn(){
   lsSet('it_learnidx', String(learnIdx));
   const auto=document.getElementById('autoplay').checked;
   const flow=document.getElementById('autoflow').checked;
+  // '이어서 말하기'가 켜져 있으면: 점수 채점 모드(음성인식)뿐 아니라
+  // '내 발음 녹음' 모드에서도 재생이 끝나면 자동으로 녹음을 시작한다.
+  const autoFollow=()=>{ if(flow && (micMode()==='record' || (SR && micMode()==='score'))) startRec(); };
   if(auto){
-    speak(current.eng, null, ()=>{ if(flow && SR && micMode()==='score') startRec(); });
-  } else if(flow && SR && micMode()==='score'){
-    startRec();
+    speak(current.eng, null, autoFollow);
+  } else {
+    autoFollow();
   }
 }
 

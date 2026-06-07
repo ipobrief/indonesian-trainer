@@ -1,5 +1,5 @@
 // 서비스워커 — HTML은 항상 최신(network-first), 정적 자원은 캐시 우선
-const CACHE = 'indo-trainer-v4';
+const CACHE = 'indo-trainer-v5';
 const ASSETS = [
   './',
   './index.html',
