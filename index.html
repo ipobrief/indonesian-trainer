@@ -225,7 +225,7 @@ if('serviceWorker' in navigator){
     <div class="card" id="classIntro">
       <h2 style="margin-top:0">💬 오늘의 대화 수업</h2>
       <p class="hint">매일 <b>패턴 5개 × 예문 5개 = 25문장</b>을 배워요. 진행 순서:</p>
-      <p class="hint">① 어제 패턴 복습 → ② 오늘 패턴 학습(의미·발음·예문·따라 읽기) → ③ 네 문장 만들기 → ④ 실전 대화 → ⑤ 발음 체크</p>
+      <p class="hint">① 어제 패턴 복습 → ② 오늘 패턴 학습(의미·발음·예문·따라 읽기) → ③ 네 문장 만들기 → ④ 실전 대화</p>
       <div class="row">
         <button class="primary" id="btnClassStart">▶️ 오늘 수업 시작</button>
       </div>
@@ -1083,8 +1083,8 @@ function renderClassStep(){
   const ps=classState.patterns, st=classState.step;
   const prog=document.getElementById('classProg');
   const body=document.getElementById('classBody');
-  const titles={1:'복습',2:'오늘의 패턴 학습',3:'네 문장 만들기',4:'실전 대화',5:'발음 체크'};
-  prog.innerHTML=`<span class="step-pill">STEP ${st}/5 · ${titles[st]}</span>`;
+  const titles={1:'복습',2:'오늘의 패턴 학습',3:'네 문장 만들기',4:'실전 대화'};
+  prog.innerHTML=`<span class="step-pill">STEP ${st}/4 · ${titles[st]}</span>`;
   let h='';
   if(st===1){
     if(!classState.prev || !classState.prev.length){
@@ -1123,24 +1123,13 @@ function renderClassStep(){
       h+=`<div class="bub-you" onclick="this.querySelector('.ans').style.display='block';speak('${esc(p.make[1])}')"><div class="bub-l">You 🔊 (눌러서 확인)</div><span class="ans" style="display:none">${p.make[1]}</span></div>`;
     });
   }
-  else if(st===5){
-    h='<p class="meta" style="margin-bottom:8px">오늘 문장을 단계별로 발음해 봐요. 🐢천천히 → 🔊자연스럽게 순서로 들어보세요.</p>';
-    ps.forEach((p,i)=>{
-      const s=p.make[1];
-      const words=s.replace(/[?.!]/g,'').split(' ').join(' / ');
-      h+=`<div class="patcard"><div class="ei" style="font-size:17px">${s}</div>`+
-         `<div class="pr" style="margin:4px 0">천천히: ${words}</div>`+
-         `<button onclick="speak('${esc(s)}',0.55)">🐢 천천히</button> `+
-         `<button onclick="speak('${esc(s)}',0.9)">🔊 자연스럽게</button></div>`;
-    });
-  }
   body.innerHTML=h;
   document.getElementById('classPrev').disabled = st<=1;
-  document.getElementById('classNext').textContent = st>=5 ? '✅ 수업 완료' : '다음 단계 ➡️';
+  document.getElementById('classNext').textContent = st>=4 ? '✅ 수업 완료' : '다음 단계 ➡️';
   body.scrollIntoView({behavior:'smooth',block:'start'});
 }
 function classNext(){
-  if(classState.step>=5){ finishClass(); return; }
+  if(classState.step>=4){ finishClass(); return; }
   classState.step++; renderClassStep();
 }
 function classPrev(){ if(classState.step>1){classState.step--;renderClassStep();} }
