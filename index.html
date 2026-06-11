@@ -97,6 +97,22 @@ if('serviceWorker' in navigator){
   .vid img{width:120px;height:68px;object-fit:cover;border-radius:8px;flex-shrink:0;background:#000}
   .vid .vt{font-size:14px;line-height:1.4;font-weight:600}
   .vid .vn{font-size:12px;color:var(--muted);margin-bottom:3px}
+  .patcard{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
+  .patcard .pp{font-size:22px;font-weight:800;color:var(--accent)}
+  .patcard .pm{font-size:15px;margin:2px 0}
+  .patcard .pr{font-size:13px;color:var(--warn);margin-bottom:8px}
+  .exrow{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);
+    border-radius:10px;padding:8px 10px;margin-top:6px;cursor:pointer}
+  .exrow:hover{border-color:var(--accent)}
+  .exrow .ei{font-size:16px;font-weight:600}
+  .exrow .ek{font-size:12px;color:var(--muted)}
+  .bub-me{background:var(--card2);border:1px solid var(--line);border-radius:14px 14px 14px 4px;
+    padding:9px 13px;margin:8px 0;max-width:88%;cursor:pointer}
+  .bub-you{background:var(--accent);color:#fff;border-radius:14px 14px 4px 14px;
+    padding:9px 13px;margin:8px 0 8px auto;max-width:88%;cursor:pointer}
+  .bub-l{font-size:11px;opacity:.8;margin-bottom:2px}
+  .step-pill{display:inline-block;background:var(--accent);color:#fff;border-radius:999px;
+    padding:4px 12px;font-size:13px;font-weight:700;margin-bottom:4px}
 </style>
 </head>
 <body>
@@ -118,6 +134,7 @@ if('serviceWorker' in navigator){
     <div class="tab active" data-tab="alphabet">알파벳</div>
     <div class="tab" data-tab="learn">학습</div>
     <div class="tab" data-tab="train">훈련</div>
+    <div class="tab" data-tab="class">💬 대화수업</div>
     <div class="tab" data-tab="review">틀린 문장 복습</div>
     <div class="tab" data-tab="stats">진도</div>
     <div class="tab" data-tab="manage">문장 관리</div>
@@ -201,6 +218,28 @@ if('serviceWorker' in navigator){
     <p class="hint">한글 뜻을 보고 인도네시아어로 말하면 음성인식이 채점합니다.
     <b>80점 이상이면 자동 통과</b>(박스↑), 그 미만이면 반복 대상이 됩니다.
     마이크 없이 연습하려면 👁️정답 보기 후 직접 채점하세요.</p>
+  </section>
+
+  <!-- CLASS (대화수업) -->
+  <section id="class" style="display:none">
+    <div class="card" id="classIntro">
+      <h2 style="margin-top:0">💬 오늘의 대화 수업</h2>
+      <p class="hint">매일 <b>패턴 5개 × 예문 5개 = 25문장</b>을 배워요. 진행 순서:</p>
+      <p class="hint">① 어제 패턴 복습 → ② 오늘 패턴 학습(의미·발음·예문·따라 읽기) → ③ 네 문장 만들기 → ④ 실전 대화 → ⑤ 발음 체크</p>
+      <div class="row">
+        <button class="primary" id="btnClassStart">▶️ 오늘 수업 시작</button>
+      </div>
+    </div>
+    <div id="classArea" style="display:none">
+      <div class="card">
+        <div id="classProg"><span class="step-pill">STEP 1/5</span></div>
+        <div id="classBody"></div>
+        <div class="row">
+          <button id="classPrev">⬅️ 이전 단계</button>
+          <button class="primary" id="classNext">다음 단계 ➡️</button>
+        </div>
+      </div>
+    </div>
   </section>
 
   <!-- LECTURE (EBS) -->
@@ -939,6 +978,9 @@ document.getElementById('alphaPlay').onclick=()=>speak(ALPHABET[alphaIdx][1]);
 document.getElementById('alphaPlayWord').onclick=()=>speak(ALPHABET[alphaIdx][3]);
 document.getElementById('alphaRec').onclick=()=>{if(!alphaRecognizing)alphaStartRec()};
 document.getElementById('alphaPrev').onclick=()=>{alphaIdx--;renderAlpha(true);};
+document.getElementById('btnClassStart').onclick=()=>startClass();
+document.getElementById('classNext').onclick=()=>classNext();
+document.getElementById('classPrev').onclick=()=>classPrev();
 document.getElementById('alphaNext').onclick=()=>{alphaIdx++;renderAlpha(true);};
 
 /* ---------- 강의 목록 (EBS / 강쌤 공용) ---------- */
@@ -961,13 +1003,174 @@ function renderVideoList(listElId, vids, plId, rendered){
 function renderEbs(){ renderVideoList('ebsList', window.EBS_VIDEOS, EBS_PL); }
 function renderGangssem(){ renderVideoList('gsList', window.GANGSSEM_VIDEOS, GS_PL); }
 
+/* ---------- 대화 수업 ----------
+   pat: 패턴 / mean: 의미 / read: 발음(한글) / ex: 예문5개[인니어,뜻]
+   make: [한글지시, 정답] / ask: [상대질문 인니어, 질문 뜻] */
+const PATTERNS=[
+ {pat:"Saya ...", mean:"나는 ~예요 (이름·신분)", read:"사야",
+  ex:[["Saya Andi.","저는 안디예요."],["Saya orang Korea.","저는 한국 사람이에요."],["Saya guru.","저는 선생님이에요."],["Saya mahasiswa.","저는 대학생이에요."],["Saya turis.","저는 관광객이에요."]],
+  make:["당신이 한국 사람이라고 말해보세요.","Saya orang Korea."], ask:["Siapa nama Anda?","이름이 뭐예요?"]},
+ {pat:"Saya dari ...", mean:"나는 ~에서 왔어요", read:"사야 다리",
+  ex:[["Saya dari Korea.","저는 한국에서 왔어요."],["Saya dari Seoul.","저는 서울에서 왔어요."],["Saya dari kantor.","저는 사무실에서 왔어요."],["Saya dari rumah.","저는 집에서 왔어요."],["Saya dari Indonesia.","저는 인도네시아에서 왔어요."]],
+  make:["한국에서 왔다고 말해보세요.","Saya dari Korea."], ask:["Anda dari mana?","어디서 왔어요?"]},
+ {pat:"Saya tinggal di ...", mean:"나는 ~에 살아요", read:"사야 띵갈 디",
+  ex:[["Saya tinggal di Jakarta.","저는 자카르타에 살아요."],["Saya tinggal di Korea.","저는 한국에 살아요."],["Saya tinggal di Seoul.","저는 서울에 살아요."],["Saya tinggal di kota.","저는 도시에 살아요."],["Saya tinggal di sini.","저는 여기 살아요."]],
+  make:["서울에 산다고 말해보세요.","Saya tinggal di Seoul."], ask:["Di mana Anda tinggal?","어디 사세요?"]},
+ {pat:"Saya suka ...", mean:"나는 ~를 좋아해요", read:"사야 수까",
+  ex:[["Saya suka kopi.","저는 커피를 좋아해요."],["Saya suka nasi goreng.","저는 나시고렝을 좋아해요."],["Saya suka musik.","저는 음악을 좋아해요."],["Saya suka film.","저는 영화를 좋아해요."],["Saya suka membaca.","저는 독서를 좋아해요."]],
+  make:["커피를 좋아한다고 말해보세요.","Saya suka kopi."], ask:["Apa yang Anda suka?","뭘 좋아하세요?"]},
+ {pat:"Saya mau ...", mean:"나는 ~하고 싶어요", read:"사야 마우",
+  ex:[["Saya mau makan.","저는 먹고 싶어요."],["Saya mau minum.","저는 마시고 싶어요."],["Saya mau pulang.","저는 집에 가고 싶어요."],["Saya mau istirahat.","저는 쉬고 싶어요."],["Saya mau belajar.","저는 공부하고 싶어요."]],
+  make:["먹고 싶다고 말해보세요.","Saya mau makan."], ask:["Anda mau apa?","뭐 하고 싶어요?"]},
+ {pat:"Saya sedang ...", mean:"나는 ~하는 중이에요", read:"사야 스당",
+  ex:[["Saya sedang belajar.","저는 공부하는 중이에요."],["Saya sedang makan.","저는 먹는 중이에요."],["Saya sedang bekerja.","저는 일하는 중이에요."],["Saya sedang istirahat.","저는 쉬는 중이에요."],["Saya sedang menonton TV.","저는 TV 보는 중이에요."]],
+  make:["공부하는 중이라고 말해보세요.","Saya sedang belajar."], ask:["Anda sedang apa?","뭐 하는 중이에요?"]},
+ {pat:"Saya bisa ...", mean:"나는 ~할 수 있어요", read:"사야 비사",
+  ex:[["Saya bisa bahasa Indonesia.","저는 인도네시아어를 할 수 있어요."],["Saya bisa memasak.","저는 요리할 수 있어요."],["Saya bisa berenang.","저는 수영할 수 있어요."],["Saya bisa menyetir.","저는 운전할 수 있어요."],["Saya bisa membantu.","저는 도울 수 있어요."]],
+  make:["인도네시아어를 할 수 있다고 말해보세요.","Saya bisa bahasa Indonesia."], ask:["Anda bisa apa?","뭘 할 수 있어요?"]},
+ {pat:"Saya akan ...", mean:"나는 ~할 거예요", read:"사야 아깐",
+  ex:[["Saya akan pergi.","저는 갈 거예요."],["Saya akan pulang.","저는 집에 갈 거예요."],["Saya akan belajar.","저는 공부할 거예요."],["Saya akan datang.","저는 올 거예요."],["Saya akan makan.","저는 먹을 거예요."]],
+  make:["갈 거라고 말해보세요.","Saya akan pergi."], ask:["Anda akan ke mana?","어디 갈 거예요?"]},
+ {pat:"Saya punya ...", mean:"나는 ~가 있어요", read:"사야 뿌냐",
+  ex:[["Saya punya waktu.","저는 시간이 있어요."],["Saya punya uang.","저는 돈이 있어요."],["Saya punya teman.","저는 친구가 있어요."],["Saya punya mobil.","저는 차가 있어요."],["Saya punya rencana.","저는 계획이 있어요."]],
+  make:["시간이 있다고 말해보세요.","Saya punya waktu."], ask:["Anda punya apa?","뭐가 있어요?"]},
+ {pat:"Saya tidak ...", mean:"나는 ~ 안 해요/아니에요", read:"사야 띠닥",
+  ex:[["Saya tidak tahu.","저는 몰라요."],["Saya tidak mengerti.","저는 이해 못 해요."],["Saya tidak suka.","저는 안 좋아해요."],["Saya tidak mau.","저는 원하지 않아요."],["Saya tidak bisa.","저는 못 해요."]],
+  make:["모른다고 말해보세요.","Saya tidak tahu."], ask:["Anda tahu?","알아요?"]},
+ {pat:"Saya butuh ...", mean:"나는 ~가 필요해요", read:"사야 부뚜",
+  ex:[["Saya butuh bantuan.","저는 도움이 필요해요."],["Saya butuh waktu.","저는 시간이 필요해요."],["Saya butuh air.","저는 물이 필요해요."],["Saya butuh istirahat.","저는 휴식이 필요해요."],["Saya butuh informasi.","저는 정보가 필요해요."]],
+  make:["도움이 필요하다고 말해보세요.","Saya butuh bantuan."], ask:["Anda butuh apa?","뭐가 필요해요?"]},
+ {pat:"Saya pikir ...", mean:"나는 ~라고 생각해요", read:"사야 삐끼르",
+  ex:[["Saya pikir itu bagus.","저는 그게 좋다고 생각해요."],["Saya pikir itu benar.","저는 그게 맞다고 생각해요."],["Saya pikir itu mahal.","저는 그게 비싸다고 생각해요."],["Saya pikir itu enak.","저는 그게 맛있다고 생각해요."],["Saya pikir itu sulit.","저는 그게 어렵다고 생각해요."]],
+  make:["그게 좋다고 생각한다고 말해보세요.","Saya pikir itu bagus."], ask:["Bagaimana menurut Anda?","어떻게 생각해요?"]},
+ {pat:"Ini ...", mean:"이건 ~예요", read:"이니",
+  ex:[["Ini kopi.","이건 커피예요."],["Ini buku saya.","이건 제 책이에요."],["Ini rumah saya.","이건 제 집이에요."],["Ini teman saya.","이쪽은 제 친구예요."],["Ini hadiah untukmu.","이건 당신을 위한 선물이에요."]],
+  make:["이건 제 책이라고 말해보세요.","Ini buku saya."], ask:["Ini apa?","이게 뭐예요?"]},
+ {pat:"Boleh saya ... ?", mean:"제가 ~해도 될까요?", read:"볼레 사야",
+  ex:[["Boleh saya masuk?","들어가도 될까요?"],["Boleh saya bertanya?","질문해도 될까요?"],["Boleh saya duduk di sini?","여기 앉아도 될까요?"],["Boleh saya pinjam ini?","이거 빌려도 될까요?"],["Boleh saya pergi sekarang?","지금 가도 될까요?"]],
+  make:["들어가도 되냐고 물어보세요.","Boleh saya masuk?"], ask:["Silakan, ada yang bisa dibantu?","네, 도와드릴까요?"]},
+ {pat:"Saya merasa ...", mean:"나는 ~한 기분이에요", read:"사야 므라사",
+  ex:[["Saya merasa senang.","저는 기뻐요."],["Saya merasa lelah.","저는 피곤해요."],["Saya merasa lapar.","저는 배고파요."],["Saya merasa sehat.","저는 건강해요."],["Saya merasa lebih baik.","저는 좀 나아졌어요."]],
+  make:["피곤하다고 말해보세요.","Saya merasa lelah."], ask:["Bagaimana perasaan Anda?","기분이 어때요?"]},
+ {pat:"Mari kita ...", mean:"우리 ~합시다", read:"마리 끼따",
+  ex:[["Mari kita makan.","우리 먹읍시다."],["Mari kita pergi.","우리 갑시다."],["Mari kita mulai.","우리 시작합시다."],["Mari kita istirahat.","우리 쉽시다."],["Mari kita bertemu lagi.","우리 또 만나요."]],
+  make:["같이 먹자고 말해보세요.","Mari kita makan."], ask:["Anda sudah makan?","밥 먹었어요?"]}
+];
+
+let classState={patterns:[],prev:[],step:1};
+function esc(s){return (s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;')}
+// 예문 등을 순서대로 읽기
+function playSeq(arr,i){ i=i||0; if(i>=arr.length) return; speak(arr[i], null, ()=>setTimeout(()=>playSeq(arr,i+1),250)); }
+function pickPatterns(){
+  const a=PATTERNS.slice();
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a.slice(0,5);
+}
+function startClass(){
+  try{classState.prev=JSON.parse(lsGet('it_class_prev')||'[]')}catch(e){classState.prev=[];}
+  classState.patterns=pickPatterns();
+  classState.step=1;
+  document.getElementById('classIntro').style.display='none';
+  document.getElementById('classArea').style.display='block';
+  markStudiedToday();
+  renderClassStep();
+}
+function classExRow(ind,kor){
+  return `<div class="exrow" onclick="speak('${esc(ind)}')"><span style="font-size:18px">🔊</span>`+
+    `<div><div class="ei">${ind}</div><div class="ek">${kor}</div></div></div>`;
+}
+function renderClassStep(){
+  const ps=classState.patterns, st=classState.step;
+  const prog=document.getElementById('classProg');
+  const body=document.getElementById('classBody');
+  const titles={1:'복습',2:'오늘의 패턴 학습',3:'네 문장 만들기',4:'실전 대화',5:'발음 체크'};
+  prog.innerHTML=`<span class="step-pill">STEP ${st}/5 · ${titles[st]}</span>`;
+  let h='';
+  if(st===1){
+    if(!classState.prev || !classState.prev.length){
+      h='<p class="hint">첫 수업이에요! 복습할 어제 패턴이 없으니 바로 오늘 학습을 시작할게요. <b>다음 단계</b>를 누르세요.</p>';
+    }else{
+      h='<p class="meta" style="margin-bottom:8px">어제 배운 패턴이에요. 의미를 보고 인도네시아어로 말해본 뒤 🔊로 확인하세요.</p>';
+      classState.prev.forEach((p,i)=>{
+        h+=`<div class="patcard"><div class="pm">${i+1}. ${p.mean}</div>`+
+           `<button onclick="speak('${esc(p.pat.replace('...','').trim())}')">🔊 ${p.pat}</button>`+
+           `<span class="pill" style="margin-left:8px">${p.read}</span></div>`;
+      });
+    }
+  }
+  else if(st===2){
+    h='<p class="meta" style="margin-bottom:8px">패턴 5개 × 예문 5개. 🔊를 누르면 발음을 들려줘요. <b>듣고 따라 읽어보세요.</b></p>';
+    ps.forEach((p,i)=>{
+      h+=`<div class="patcard"><div class="pp">${i+1}. ${p.pat}</div>`+
+         `<div class="pm">뜻: ${p.mean}</div><div class="pr">발음: ${p.read}</div>`+
+         `<button onclick="playSeq([${p.ex.map(e=>`'${esc(e[0])}'`).join(',')}])">▶️ 예문 전체 듣기</button>`+
+         p.ex.map(e=>classExRow(e[0],e[1])).join('')+`</div>`;
+    });
+  }
+  else if(st===3){
+    h='<p class="meta" style="margin-bottom:8px">한글 지시를 보고 인도네시아어로 말해보세요. 그다음 <b>정답 보기</b>로 확인!</p>';
+    ps.forEach((p,i)=>{
+      h+=`<div class="patcard"><div class="pp" style="font-size:18px">${i+1}. ${p.pat}</div>`+
+         `<div class="pm" style="margin:6px 0">👉 ${p.make[0]}</div>`+
+         `<button onclick="this.nextElementSibling.style.display='block';speak('${esc(p.make[1])}')">👁️ 정답 보기 🔊</button>`+
+         `<div style="display:none;margin-top:8px;font-size:18px;font-weight:700;color:var(--good)">${p.make[1]}</div></div>`;
+    });
+  }
+  else if(st===4){
+    h='<p class="meta" style="margin-bottom:8px">오늘 배운 패턴으로 대화해요. <b>나(Me)</b> 말풍선을 누르면 들려주고, <b>You</b>를 누르면 답을 보여줘요.</p>';
+    ps.forEach(p=>{
+      h+=`<div class="bub-me" onclick="speak('${esc(p.ask[0])}')"><div class="bub-l">Me 🔊</div>${p.ask[0]}<div class="ek" style="font-size:12px;opacity:.8">${p.ask[1]}</div></div>`;
+      h+=`<div class="bub-you" onclick="this.querySelector('.ans').style.display='block';speak('${esc(p.make[1])}')"><div class="bub-l">You 🔊 (눌러서 확인)</div><span class="ans" style="display:none">${p.make[1]}</span></div>`;
+    });
+  }
+  else if(st===5){
+    h='<p class="meta" style="margin-bottom:8px">오늘 문장을 단계별로 발음해 봐요. 🐢천천히 → 🔊자연스럽게 순서로 들어보세요.</p>';
+    ps.forEach((p,i)=>{
+      const s=p.make[1];
+      const words=s.replace(/[?.!]/g,'').split(' ').join(' / ');
+      h+=`<div class="patcard"><div class="ei" style="font-size:17px">${s}</div>`+
+         `<div class="pr" style="margin:4px 0">천천히: ${words}</div>`+
+         `<button onclick="speak('${esc(s)}',0.55)">🐢 천천히</button> `+
+         `<button onclick="speak('${esc(s)}',0.9)">🔊 자연스럽게</button></div>`;
+    });
+  }
+  body.innerHTML=h;
+  document.getElementById('classPrev').disabled = st<=1;
+  document.getElementById('classNext').textContent = st>=5 ? '✅ 수업 완료' : '다음 단계 ➡️';
+  body.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function classNext(){
+  if(classState.step>=5){ finishClass(); return; }
+  classState.step++; renderClassStep();
+}
+function classPrev(){ if(classState.step>1){classState.step--;renderClassStep();} }
+function finishClass(){
+  // 오늘 패턴을 내일 복습용으로 저장
+  const today=classState.patterns.map(p=>({pat:p.pat,mean:p.mean,read:p.read}));
+  lsSet('it_class_prev',JSON.stringify(today));
+  document.getElementById('classProg').innerHTML='<span class="step-pill" style="background:var(--good);color:#06281c">🎉 수업 완료!</span>';
+  document.getElementById('classBody').innerHTML=
+    '<p class="hint">오늘 패턴 5개 × 예문 5개, 25문장을 끝냈어요! 내일 수업에서 오늘 패턴을 복습합니다.</p>'+
+    '<div class="row"><button class="primary" onclick="startClass()">🔁 새 수업 다시 시작</button></div>';
+  document.getElementById('classPrev').style.display='none';
+  document.getElementById('classNext').style.display='none';
+}
+function renderClass(){
+  // 탭 진입 시 초기 화면(인트로) 보이게
+  document.getElementById('classPrev').style.display='';
+  document.getElementById('classNext').style.display='';
+  if(document.getElementById('classArea').style.display!=='block')
+    document.getElementById('classIntro').style.display='block';
+}
+
 /* ---------- 이벤트 ---------- */
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
   t.classList.add('active');
-  ['alphabet','learn','train','lecture','lecture2','review','stats','manage','alarm'].forEach(id=>
+  ['alphabet','learn','train','class','lecture','lecture2','review','stats','manage','alarm'].forEach(id=>
     document.getElementById(id).style.display=id===t.dataset.tab?'block':'none');
   if(t.dataset.tab==='alphabet')renderAlpha(false);
+  if(t.dataset.tab==='class')renderClass();
   if(t.dataset.tab==='lecture')renderEbs();
   if(t.dataset.tab==='lecture2')renderGangssem();
   if(t.dataset.tab==='train')renderTrain();
