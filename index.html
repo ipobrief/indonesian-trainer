@@ -228,6 +228,7 @@ if('serviceWorker' in navigator){
       <p class="hint">① 어제 패턴 복습 → ② 오늘 패턴 학습(의미·발음·예문·따라 읽기) → ③ 네 문장 만들기 → ④ 실전 대화</p>
       <div class="row">
         <button class="primary" id="btnClassStart">▶️ 오늘 수업 시작</button>
+        <button id="btnClassHistory">📚 지난 수업 복습</button>
       </div>
     </div>
     <div id="classArea" style="display:none">
@@ -979,6 +980,7 @@ document.getElementById('alphaPlayWord').onclick=()=>speak(ALPHABET[alphaIdx][3]
 document.getElementById('alphaRec').onclick=()=>{if(!alphaRecognizing)alphaStartRec()};
 document.getElementById('alphaPrev').onclick=()=>{alphaIdx--;renderAlpha(true);};
 document.getElementById('btnClassStart').onclick=()=>startClass();
+document.getElementById('btnClassHistory').onclick=()=>showClassHistory();
 document.getElementById('classNext').onclick=()=>classNext();
 document.getElementById('classPrev').onclick=()=>classPrev();
 document.getElementById('alphaNext').onclick=()=>{alphaIdx++;renderAlpha(true);};
@@ -1137,12 +1139,47 @@ function finishClass(){
   // 오늘 패턴을 내일 복습용으로 저장
   const today=classState.patterns.map(p=>({pat:p.pat,mean:p.mean,read:p.read}));
   lsSet('it_class_prev',JSON.stringify(today));
+  // 지난 수업 기록(전체 패턴+예문) 저장
+  try{
+    let hist=JSON.parse(lsGet('it_class_history')||'[]');
+    hist.unshift({date:new Date().toISOString().slice(0,10), patterns:classState.patterns});
+    lsSet('it_class_history', JSON.stringify(hist.slice(0,30)));
+  }catch(e){}
   document.getElementById('classProg').innerHTML='<span class="step-pill" style="background:var(--good);color:#06281c">🎉 수업 완료!</span>';
   document.getElementById('classBody').innerHTML=
     '<p class="hint">오늘 패턴 5개 × 예문 5개, 25문장을 끝냈어요! 내일 수업에서 오늘 패턴을 복습합니다.</p>'+
     '<div class="row"><button class="primary" onclick="startClass()">🔁 새 수업 다시 시작</button></div>';
   document.getElementById('classPrev').style.display='none';
   document.getElementById('classNext').style.display='none';
+}
+function showClassHistory(){
+  let hist=[]; try{ hist=JSON.parse(lsGet('it_class_history')||'[]'); }catch(e){}
+  document.getElementById('classIntro').style.display='none';
+  document.getElementById('classArea').style.display='block';
+  document.getElementById('classPrev').style.display='none';
+  document.getElementById('classNext').style.display='none';
+  document.getElementById('classProg').innerHTML='<span class="step-pill">📚 지난 수업 복습</span>';
+  let h='<div class="row" style="margin-bottom:8px"><button onclick="exitClassHistory()">🏠 처음으로</button></div>';
+  if(!hist.length){
+    h+='<p class="hint">아직 완료한 수업이 없어요. 수업을 끝까지 진행하면 여기에 기록돼요.</p>';
+  }else{
+    hist.forEach((les,li)=>{
+      h+=`<div class="patcard"><div class="pm" style="font-weight:700;color:var(--accent)">📅 ${les.date} · 수업 ${hist.length-li}회차</div>`;
+      (les.patterns||[]).forEach(p=>{
+        h+=`<div style="margin-top:10px"><div class="ei">${p.pat} <span class="ek">— ${p.mean}</span></div>`+
+           `<button onclick="playSeq([${p.ex.map(e=>`'${esc(e[0])}'`).join(',')}])">▶️ 예문 전체 듣기</button>`+
+           p.ex.map(e=>classExRow(e[0],e[1])).join('')+`</div>`;
+      });
+      h+='</div>';
+    });
+  }
+  document.getElementById('classBody').innerHTML=h;
+}
+function exitClassHistory(){
+  document.getElementById('classArea').style.display='none';
+  document.getElementById('classIntro').style.display='block';
+  document.getElementById('classPrev').style.display='';
+  document.getElementById('classNext').style.display='';
 }
 function renderClass(){
   // 탭 진입 시 초기 화면(인트로) 보이게
